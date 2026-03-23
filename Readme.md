@@ -95,24 +95,6 @@ graph TD;
   - JWT token generation/validation (using `python-jose`).
   - Secure password hashing natively via `bcrypt`.
 
-## Challenges Faced & Debugging Steps
-Throughout the implementation, we encountered multiple hurdles which were successfully debugged and resolved:
-
-1. **Docker un-availability**:
-   - *Issue:* Initially planned to run PostgreSQL via Docker (`docker-compose up -d --build`), but Docker was not installed on the system.
-   - *Fix:* We briefly shifted the plan to use a local `SQLite` database.
-2. **Local PostgreSQL Connection**:
-   - *Issue:* You mentioned having a local PostgreSQL server running on port `5433`, so we switched back to PostgreSQL.
-   - *Fix:* We updated `.env` to connect to `localhost:5433`.
-3. **Database Credentials & Creation**:
-   - *Issue:* Running `alembic revision --autogenerate` failed multiple times because:
-     - First, the default `POSTGRES_PASSWORD="postgres"` failed authentication.
-     - Second, even after you updated the password to `admin123` in `alembic.ini` and we synced it with `.env`, we hit a `database "auth_db" does not exist` error.
-   - *Fix:* I updated `.env` properly and ran `PGPASSWORD=admin123 createdb -p 5433 -U postgres auth_db` to manually create the database before running the Alembic migration successfully.
-4. **Passlib & Bcrypt Compatibility Validation**:
-   - *Issue:* During the first API test for `/signup`, we hit a `500 Internal Server Error`. The logs showed `ValueError: password cannot be longer than 72 bytes, truncate manually if necessary`, indicating a known compatibility bug between the newer version of `bcrypt` and the `passlib` context wrapper.
-   - *Fix:* Dropped `passlib` completely and rewrote `app/utils/password.py` directly using the native `bcrypt` library (`bcrypt.hashpw` and `bcrypt.checkpw`) which encodes strings to bytes natively. This instantly fixed the hashing process!
-
 ## Logging Integration
 A centralized logger is configured in `app/utils/logger.py` to trace system events and errors. The logger outputs a standardized format to the terminal console:
 - **Format**: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`
